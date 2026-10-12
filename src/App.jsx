@@ -1,3 +1,5 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import WhyChooseUs from "./components/WhyChooseUs";
@@ -9,7 +11,11 @@ import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
 import CallButton from "./components/CallButton";
 
-function App() {
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminLogin from "./pages/AdminLogin";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+function ClinicWebsite() {
   return (
     <>
       <Navbar />
@@ -21,7 +27,30 @@ function App() {
       <Contact />
       <Footer />
       <WhatsAppButton />
+      <CallButton />
     </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<ClinicWebsite />} />
+
+        <Route
+          path="/admin/login"
+          element={<AdminLogin />}
+        />
+
+        <Route element={<ProtectedRoute />}>
+          <Route
+            path="/admin"
+            element={<AdminDashboard />}
+          />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 

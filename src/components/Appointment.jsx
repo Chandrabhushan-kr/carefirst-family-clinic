@@ -2,6 +2,9 @@ import { useState } from "react";
 import clinicData from "../clinicData";
 
 function Appointment() {
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -17,28 +20,55 @@ function Appointment() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const whatsappNumber = clinicData.contact.whatsapp;
+    if (isSubmitting) return;
 
-    const whatsappMessage = `
-Hello CareFirst Family Clinic,
+    setSuccessMessage("");
+    setErrorMessage("");
+    setIsSubmitting(true);
 
-I would like to request an appointment.
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/appointments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          patientName: formData.name,
+          phone: formData.phone,
+          preferredDate: formData.date,
+          preferredTime: formData.time,
+          message: formData.message,
+        }),
+      });
 
-Name: ${formData.name}
-Phone: ${formData.phone}
-Preferred Date: ${formData.date}
-Preferred Time: ${formData.time}
+      if (!response.ok) {
+        throw new Error(`Booking failed with status ${response.status}`);
+      }
 
-Message:
-${formData.message}
-`;
+      setSuccessMessage(
+        "Appointment request submitted successfully. Our clinic team will contact you shortly.",
+      );
 
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+      setFormData({
+        name: "",
+        phone: "",
+        date: "",
+        time: "",
+        message: "",
+      });
+    } catch (error) {
+      console.error("Appointment booking error:", error);
 
-    window.open(whatsappUrl, "_blank");
+      setErrorMessage(
+        "Unable to submit your appointment request. Please check your connection and try again.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -148,9 +178,18 @@ ${formData.message}
                 placeholder="Briefly describe your enquiry"
               ></textarea>
             </div>
+            {successMessage && (
+              <p className="success-message">{successMessage}</p>
+            )}
 
-            <button type="submit" className="primary-button">
-              Request Appointment via WhatsApp
+            {errorMessage && <p className="error-message">{errorMessage}</p>}
+
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Submitting..." : "Request Appointment"}
             </button>
           </form>
         </div>
